@@ -1,0 +1,191 @@
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Poppins&display=swap');
+.login{
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    /* background-image: url("/hijau.jpg"); */
+}
+
+.loginwrapper{
+    width: 80vw;
+    height: 90vh;
+    margin: 20px;
+    box-shadow: #000000 0px 0px 8px;
+}
+/* Gaya utama untuk setiap slide */
+.slide {
+    position: relative;
+    overflow: hidden;
+  }
+  
+  /* Gaya untuk gambar di dalam slide */
+  .slide img {
+    width: 100%;
+    height: 90vh;
+    transition: transform 0.5s ease;
+  }
+  
+  /* Gaya untuk overlay teks di atas gambar */
+  .textOverlay {
+    position: absolute;
+    top: 50%; /* Menempatkan teks di tengah secara vertikal */
+    left: 50%; /* Menempatkan teks di tengah secara horizontal */
+    transform: translate(-50%, -50%);
+    text-align: center;
+    color: #fff; /* Warna teks */
+  }
+  .overlayBackground {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+  }
+  
+  /* Gaya untuk judul teks di dalam overlay */
+  .textOverlay h2 {
+    font-size: 1.5em;
+    font-family: 'Times New Roman', Times, serif;/* Ukuran font judul */
+    margin: 0; /* Menghapus margin default untuk judul */
+  }
+  
+  .loginleft {
+    height: 90vh;
+    overflow-y: auto; /* Sembunyikan scrollbar secara default */
+    padding: 30px;
+    background-color: #fff;
+  }
+  
+  
+  /* Gaya scrollbar */
+  .loginleft::-webkit-scrollbar {
+    width: 0.3em; /* Lebar scrollbar */
+  }
+  
+  .loginleft::-webkit-scrollbar-thumb {
+    background-color: #555; /* Warna thumb (bagian yang bisa di-drag) */
+    border-radius: 10px; /* Border radius thumb */
+  }
+  
+  .loginleft::-webkit-scrollbar-track {
+    background-color: #fff; /* Warna track (bagian latar belakang scrollbar) */
+  }
+  
+  /* Gaya scrollbar saat dihover */
+  .loginleft::-webkit-scrollbar-thumb:hover {
+    background-color: #888;
+  }
+.title{
+    color: #000000;
+    font-family: 'Poppins', sans-serif;
+    font-size: 2em;
+    font-weight: 700;
+}
+.or{
+    color: #000000;
+    font-family: 'Poppins', sans-serif;
+    font-size: 1em;
+    font-weight: 700;
+    letter-spacing: 0.48px;
+    margin-top: 20px;
+    text-align: center;
+}
+.loginwith{
+    display: flex;
+    align-items: center;
+    gap: 1em;
+    margin-top: 2em;
+}
+.line{
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    width: 245px;
+    height: 3.5em;
+    border-radius: 5px;
+    box-shadow: #000000 0px 0px 8px;
+    color: #000;
+    font-family: 'Poppins', sans-serif;
+    font-size: 12px;
+    font-weight: 500;
+}
+.line:hover{
+    cursor: pointer;
+    border: none;
+}
+.input{
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-top: 10px;
+    position: relative;
+}
+.input input{
+    height: 2em;
+    border-bottom: 2px solid #000000;
+    color: #000000;
+    font-family: 'Poppins', sans-serif;
+    font-size: 1em;
+    font-weight: 400;
+}
+.input select{
+    height: 3em;
+    border-bottom: 2px solid #000000;
+    color: #000000;
+    font-family: 'Poppins', sans-serif;
+    font-size: 1em;
+    font-weight: 400;
+}
+
+.input label{
+    color: #000000;
+    font-size: 0.8em;
+    font-weight: 700;
+    letter-spacing: 0.48px;
+    font-family: 'Poppins', sans-serif;
+}
+.input input:focus{
+    outline: none;
+    color: #494949;
+}
+.input select:focus{
+    outline: none;
+    color: #494949;
+}
+
+.input button {
+    margin-top: 10px;
+    height: 2.5em;
+    width: 100%;
+    border-radius: 5px;
+    background: linear-gradient(45deg, #63C6FF, #0055FF);
+    color: #fff;
+    font-family: 'Poppins', sans-serif;
+    font-size: 1em;
+    font-weight: 700;
+    transition: background 0.3s ease;
+  }
+  
+  .input button:hover {
+    background: linear-gradient(45deg, #0055FF, #63C6FF);
+  }
+  
+
+.input a{
+    color: #000000;
+    font-family: 'Poppins', sans-serif;
+    font-size: 1em;
+    font-weight: 700;
+    letter-spacing: 0.48px;
+    text-decoration: none;
+}
+.input a:hover{
+    text-decoration: underline;
+    cursor: pointer;
+    text-shadow: #0c1ab2 0px 0px 10px;
+}
+
+ 
