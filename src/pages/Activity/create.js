@@ -5,7 +5,7 @@ import axios from "axios";
 import Swal from "sweetalert2";
 import Footer2 from "@/component/Footer/Footer2";
 
-const create = () => {
+const Create = () => {
   const [form, setForm] = useState({
     categoryId: "", // Menghapus nilai default
     title: "",
@@ -476,4 +476,4 @@ const create = () => {
   );
 };
 
-export default create;
+export default Create;
