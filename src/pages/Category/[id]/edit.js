@@ -26,6 +26,8 @@ const Edit = () => {
           name: response.data.data.name,
           imageUrl: response.data.data.imageUrl,
         });
+
+        setPreviousImageUrl(response.data.data.imageUrl);
       } catch (err) {
         console.error(err.response);
       }
@@ -40,47 +42,85 @@ const Edit = () => {
     imageUrl: "",
   });
 
+  const [previousImageUrl, setPreviousImageUrl] = useState("");
+
   const handleChange = (e) => {
-    setUpdateData({
-      ...updateData,
-      [e.target.name]: e.target.value,
-    });
+    const { name, value, files } = e.target;
+
+    if (name === "imageUrl" && files && files[0]) {
+      setUpdateData({
+        ...updateData,
+        [name]: files[0],
+      });
+    } else {
+      setUpdateData({
+        ...updateData,
+        [name]: value,
+      });
+    }
   };
 
   // console.log("form", formData);
-  const handleSubmit = async () => {
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+
     const { name, imageUrl } = updateData;
-    const token = localStorage.getItem("token");
+
+    if (!name.trim()) {
+      Swal.fire("Error", "Harap isi semua kolom", "error");
+      return;
+    }
+
     try {
-      const response = await fetch(
-        `https://travel-journal-api-bootcamp.do.dibimbing.id/api/v1/update-category/${id}`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            apikey: "24405e01-fbc1-45a5-9f5a-be13afcd757c",
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify({
-            name,
-            imageUrl,
-          }),
-        }
-      );
+      const formData = new FormData();
+      formData.append("image", imageUrl);
 
-      if (response.status === 200) {
-        Swal.fire("Berhasil", "Banner Berhasil di edit", "success");
+      const token = localStorage.getItem("token");
 
-        // Handle success, e.g., redirect to another page
-        console.log("Banner updated successfully!");
-        router.push("/Category");
+      const config = {
+        headers: {
+          "Content-Type": "multipart/form-data",
+          apikey: "24405e01-fbc1-45a5-9f5a-be13afcd757c",
+          Authorization: `Bearer ${token}`,
+        },
+      };
+
+      if (imageUrl instanceof File) {
+        const response = await axios.post(
+          `https://travel-journal-api-bootcamp.do.dibimbing.id/api/v1/upload-image`,
+          formData,
+          config
+        );
+
+        const categoryData = {
+          name: name,
+          imageUrl: response.data.url,
+        };
+
+        const updateResponse = await axios.post(
+          `https://travel-journal-api-bootcamp.do.dibimbing.id/api/v1/update-category/${id}`,
+          categoryData,
+          config
+        );
       } else {
-        // Handle error
-        console.error("Failed to update banner");
-        Swal.fire("Gagal", "Kategori gagal di edit", "error");
+        const categoryData = {
+          name: name,
+          imageUrl: previousImageUrl,
+        };
+
+        const updateResponse = await axios.post(
+          `https://travel-journal-api-bootcamp.do.dibimbing.id/api/v1/update-category/${id}`,
+          categoryData,
+          config
+        );
       }
+
+      Swal.fire("Berhasil", "Banner Berhasil di edit", "success");
+
+      router.push("/Category");
     } catch (error) {
-      console.error("Error occurred while updating banner", error);
+      console.error("Error:", error.response.data.message);
+      Swal.fire("Gagal", error.response.data.message, "erro");
     }
   };
 
@@ -182,18 +222,27 @@ const Edit = () => {
           </div>
           <div>
             <label className="block mb-2 text-sm font-medium text-gray-900 dark:text-white">
-              Gambar URL
+              Gambar
             </label>
+            <div>
+              {previousImageUrl && ( // Jika ada URL gambar sebelumnya, tampilkan gambar tersebut
+                <img
+                  src={previousImageUrl}
+                  alt="Previous Image"
+                  className="w-24 h-24 mb-2"
+                />
+              )}
+              <label className="block mb-2 text-sm font-medium text-gray-900 dark:text-white">
+                Pilih Gambar Baru (Opsional)
+              </label>
+            </div>
             <input
-              type="text"
-              name="imageUrl"
-              id="imageUrl"
-              value={updateData.imageUrl}
+              type="file"
+              accept="image/*"
               onChange={handleChange}
+              name="imageUrl"
               aria-describedby="helper-text-explanation"
               className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5  dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
-              placeholder="Http://image.com"
-              required
             />
           </div>
 
@@ -214,51 +263,6 @@ const Edit = () => {
           </div>
         </div>
       </div>
-      {/* <div className="max-w-md mx-auto">
-        <div className="relative z-0 w-full mb-5 group">
-          <input
-            type="text"
-            name="name"
-            id="name"
-            value={updateData.name}
-            onChange={handleChange}
-            className="block py-2.5 px-0 w-full text-sm text-gray-900 bg-transparent border-0 border-b-2 border-gray-300 appearance-none  dark:border-gray-600 dark:focus:border-blue-500 focus:outline-none focus:ring-0 focus:border-blue-600 peer"
-            placeholder=" "
-            required
-          />
-          <label
-            htmlFor="floating_email"
-            className="peer-focus:font-medium absolute text-sm text-gray-500 dark:text-gray-400 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 rtl:peer-focus:translate-x-1/4 rtl:peer-focus:left-auto peer-focus:text-blue-600 peer-focus:dark:text-blue-500 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6"
-          >
-            Nama Kategori
-          </label>
-        </div>
-        <div className="relative z-0 w-full mb-5 group">
-          <input
-            type="text"
-            name="imageUrl"
-            id="imageUrl"
-            value={updateData.imageUrl}
-            onChange={handleChange}
-            className="block py-2.5 px-0 w-full text-sm text-gray-900 bg-transparent border-0 border-b-2 border-gray-300 appearance-none  dark:border-gray-600 dark:focus:border-blue-500 focus:outline-none focus:ring-0 focus:border-blue-600 peer"
-            placeholder=" "
-            required
-          />
-          <label
-            htmlFor="floating_password"
-            className="peer-focus:font-medium absolute text-sm text-gray-500 dark:text-gray-400 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 rtl:peer-focus:translate-x-1/4 peer-focus:text-blue-600 peer-focus:dark:text-blue-500 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6"
-          >
-            Gambar Kategori
-          </label>
-        </div>
-        <button
-          type="submit"
-          onClick={handleSubmit}
-          className="text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm w-full sm:w-auto px-5 py-2.5 text-center dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800"
-        >
-          Submit
-        </button>
-      </div> */}
     </div>
   );
 };

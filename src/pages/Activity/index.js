@@ -4,10 +4,15 @@ import Link from "next/link";
 import Swal from "sweetalert2";
 import NavBar from "@/component/NavBar";
 import Footer from "@/component/Footer";
+import { useAuth } from "../../hooks/useAuth";
 const Activity = () => {
+  const user = useAuth();
   const [activity, setActivity] = useState([]);
 
   useEffect(() => {
+    if (!user) {
+      router.push("/Login");
+    }
     const fetchActivity = async () => {
       try {
         const response = await axios.get(
@@ -56,12 +61,10 @@ const Activity = () => {
             config
           )
           .then((res) => {
-            console.log("res", res.data);
             Swal.fire("Berhasil", "Activitas Berhasil di Hapus.", "success");
             window.location.reload();
           })
           .catch((err) => {
-            console.log(err.response);
             Swal.fire("Gagal", "Gagal Hapus Aktivitas.", "error");
           });
       }

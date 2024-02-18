@@ -32,6 +32,8 @@ const Edit = () => {
           promo_discount_price: response.data.data.promo_discount_price,
           minimum_claim_price: response.data.data.minimum_claim_price,
         });
+
+        setPreviousImageUrl(response.data.data.imageUrl);
       } catch (err) {
         console.error(err.response);
       }
@@ -51,15 +53,27 @@ const Edit = () => {
     minimum_claim_price: 0,
   });
 
+  const [previousImageUrl, setPreviousImageUrl] = useState("");
+
   const handleChange = (e) => {
-    const { name, value } = e.target;
-    setUpdateData({
-      ...updateData,
-      [name]: value,
-    });
+    const { name, value, files } = e.target;
+
+    if (name === "imageUrl" && files && files[0]) {
+      setUpdateData({
+        ...updateData,
+        [name]: files[0],
+      });
+    } else {
+      setUpdateData({
+        ...updateData,
+        [name]: value,
+      });
+    }
   };
 
-  const handleSubmit = async () => {
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+
     const {
       title,
       description,
@@ -69,40 +83,99 @@ const Edit = () => {
       promo_discount_price,
       minimum_claim_price,
     } = updateData;
-    const token = localStorage.getItem("token");
-    try {
-      const response = await fetch(
-        `https://travel-journal-api-bootcamp.do.dibimbing.id/api/v1/update-promo/${id}`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            apikey: "24405e01-fbc1-45a5-9f5a-be13afcd757c",
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify({
-            title,
-            description,
-            imageUrl,
-            terms_condition,
-            promo_code,
-            promo_discount_price,
-            minimum_claim_price,
-          }),
-        }
-      );
 
-      if (response.status === 200) {
-        Swal.fire("Berhasil", "Promo Berhasil diupdate", "success");
-        // Handle success, e.g., redirect to another page
-        router.push("/Promo");
+    console.log("form", updateData);
+    updateData.promo_discount_price = parseFloat(
+      updateData.promo_discount_price
+    );
+    updateData.minimum_claim_price = parseFloat(updateData.minimum_claim_price);
+
+    // Konversi nilai promo_discount_price dan minimum_claim_price ke angka
+    const promoDiscountPrice = parseFloat(promo_discount_price);
+    const minimumClaimPrice = parseFloat(minimum_claim_price);
+
+    console.log("promoDiscountPrice", promoDiscountPrice);
+    console.log("minimumClaimPrice", minimumClaimPrice);
+
+    // Memeriksa apakah nilai yang dikonversi valid
+    if (isNaN(promoDiscountPrice) || isNaN(minimumClaimPrice)) {
+      Swal.fire("Error", "Harga promo harus berupa angka", "error");
+      return;
+    }
+
+    if (
+      !title.trim() ||
+      !description.trim() ||
+      !terms_condition.trim() ||
+      !promo_code.trim() ||
+      !promo_discount_price ||
+      !minimum_claim_price
+    ) {
+      Swal.fire("Error", "Harap isi semua kolom", "error");
+      return;
+    }
+
+    try {
+      const formData = new FormData();
+      formData.append("image", imageUrl);
+      formData.append("promo_discount_price", promo_discount_price);
+      formData.append("minimum_claim_price", minimum_claim_price);
+
+      const token = localStorage.getItem("token");
+
+      const config = {
+        headers: {
+          apikey: "24405e01-fbc1-45a5-9f5a-be13afcd757c",
+          Authorization: `Bearer ${token}`,
+        },
+      };
+
+      if (imageUrl instanceof File) {
+        const response = await axios.post(
+          `https://travel-journal-api-bootcamp.do.dibimbing.id/api/v1/upload-image`,
+          formData,
+          config
+        );
+
+        const promoData = {
+          title: title,
+          description: description,
+          imageUrl: response.data.url,
+          terms_condition: terms_condition,
+          promo_code: promo_code,
+          promo_discount_price: promoDiscountPrice,
+          minimum_claim_price: minimumClaimPrice,
+        };
+
+        const updateResponse = await axios.post(
+          `https://travel-journal-api-bootcamp.do.dibimbing.id/api/v1/update-promo/${id}`,
+          promoData,
+          config
+        );
       } else {
-        // Handle error
-        console.error("Failed to update promo");
-        Swal.fire("Gagal", "Promo Gagal diupdate", "error");
+        const promoData = {
+          title: title,
+          description: description,
+          imageUrl: previousImageUrl,
+          terms_condition: terms_condition,
+          promo_code: promo_code,
+          promo_discount_price: promoDiscountPrice,
+          minimum_claim_price: minimumClaimPrice,
+        };
+
+        const updateResponse = await axios.post(
+          `https://travel-journal-api-bootcamp.do.dibimbing.id/api/v1/update-promo/${id}`,
+          promoData,
+          config
+        );
       }
+
+      Swal.fire("Berhasil", "Promo Berhasil diupdate", "success");
+      // Handle success, e.g., redirect to another page
+      router.push("/Promo");
     } catch (error) {
       console.error("Error:", error);
+      Swal.fire("Gagal", error.response.data.message, "error");
     }
   };
   return (
@@ -218,9 +291,29 @@ const Edit = () => {
           </div>
           <div>
             <label className="block mb-2 text-sm font-medium text-gray-900 dark:text-white">
-              Gambar URL
+              Gambar
             </label>
+            <div>
+              {previousImageUrl && ( // Jika ada URL gambar sebelumnya, tampilkan gambar tersebut
+                <img
+                  src={previousImageUrl}
+                  alt="Previous Image"
+                  className="w-24 h-24 mb-2"
+                />
+              )}
+              <label className="block mb-2 text-sm font-medium text-gray-900 dark:text-white">
+                Pilih Gambar Baru (Opsional)
+              </label>
+            </div>
             <input
+              type="file"
+              accept="image/*"
+              onChange={handleChange}
+              name="imageUrl"
+              aria-describedby="helper-text-explanation"
+              className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5  dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+            />
+            {/* <input
               type="text"
               name="imageUrl"
               value={updateData.imageUrl}
@@ -229,7 +322,7 @@ const Edit = () => {
               className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5  dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
               placeholder="Http://image.com"
               required
-            />
+            /> */}
           </div>
           <div className="grid md:grid-cols-2 md:gap-6">
             <div>

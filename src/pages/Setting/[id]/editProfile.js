@@ -3,9 +3,11 @@ import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useRouter } from "next/router";
 import axios from "axios";
+import Swal from "sweetalert2";
 const EditProfile = () => {
   const { id } = useParams();
   const router = useRouter();
+  const [token, setToken] = useState("");
   const [updateData, setUpdateData] = useState({
     name: "",
     email: "",
@@ -22,34 +24,57 @@ const EditProfile = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const response = await axios.get(
-          "https://travel-journal-api-bootcamp.do.dibimbing.id/api/v1/user",
-          {
-            headers: {
-              apikey: "24405e01-fbc1-45a5-9f5a-be13afcd757c",
-            },
-          }
-        );
-        setUpdateData({
-          ...updateData,
-          name: response.data.data.name,
-          email: response.data.data.email,
-          profilePictureUrl: response.data.data.profilePictureUrl,
-          phoneNumber: response.data.data.phoneNumber,
-        });
-        console.log(response.data.data);
+        const storedToken = localStorage.getItem("token");
+        if (storedToken) {
+          setToken(storedToken);
+          const response = await axios.get(
+            "https://travel-journal-api-bootcamp.do.dibimbing.id/api/v1/user",
+            {
+              headers: {
+                "Content-Type": "application/json",
+                apikey: "24405e01-fbc1-45a5-9f5a-be13afcd757c",
+                Authorization: `Bearer ${storedToken}`, // Gunakan token dari localStorage
+              },
+            }
+          );
+          setUpdateData({
+            ...updateData,
+            name: response.data.data.name,
+            email: response.data.data.email,
+            profilePictureUrl: response.data.data.profilePictureUrl,
+            phoneNumber: response.data.data.phoneNumber,
+          });
+        }
       } catch (error) {
         console.error(error);
       }
     };
 
     fetchData();
-  },[]);
+  }, []);
 
   const handleSubmit = async () => {
-    const token = localStorage.getItem("token");
     try {
-    } catch (error) {}
+      const response = await axios.post(
+        "https://travel-journal-api-bootcamp.do.dibimbing.id/api/v1/update-profile",
+        updateData,
+        {
+          headers: {
+            "Content-Type": "application/json",
+            apikey: "24405e01-fbc1-45a5-9f5a-be13afcd757c",
+            Authorization: `Bearer ${token}`, // Gunakan token untuk otentikasi
+          },
+        }
+      );
+      console.log("Profile updated successfully:", response.data);
+      // Redirect or show success message
+      Swal.fire("Berhasil", "Profil Berhasil di update", "success");
+      router.push("/Setting");
+    } catch (error) {
+      console.error("Error updating profile:", error);
+      // Show error message
+      Swal.fire("Gagal", "Terjadi kesalahan saat mengupdate profil", "error");
+    }
   };
   return (
     <div className="md:container md:mx-auto">
@@ -132,7 +157,7 @@ const EditProfile = () => {
         <div className="space-y-6">
           <div>
             <label className="block mb-2 text-sm font-medium text-gray-900 dark:text-white">
-              Nama Banner
+              Nama
             </label>
             <input
               type="text"
@@ -147,16 +172,46 @@ const EditProfile = () => {
           </div>
           <div>
             <label className="block mb-2 text-sm font-medium text-gray-900 dark:text-white">
-              Gambar URL
+              Email
+            </label>
+            <input
+              type="email"
+              name="email"
+              value={updateData.email}
+              onChange={handleChange}
+              aria-describedby="helper-text-explanation"
+              className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5  dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+              placeholder="Nama Banner"
+              required
+            />
+          </div>
+          <div>
+            <label className="block mb-2 text-sm font-medium text-gray-900 dark:text-white">
+              Foto URL
             </label>
             <input
               type="text"
-              name="imageUrl"
-              value={updateData.imageUrl}
+              name="profilePictureUrl"
+              value={updateData.profilePictureUrl}
               onChange={handleChange}
               aria-describedby="helper-text-explanation"
               className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5  dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
               placeholder="Http://image.com"
+              required
+            />
+          </div>
+          <div>
+            <label className="block mb-2 text-sm font-medium text-gray-900 dark:text-white">
+              Nomor Telepon
+            </label>
+            <input
+              type="text"
+              name="phoneNumber"
+              value={updateData.phoneNumber}
+              onChange={handleChange}
+              aria-describedby="helper-text-explanation"
+              className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5  dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+              placeholder="Nama Banner"
               required
             />
           </div>
@@ -170,7 +225,7 @@ const EditProfile = () => {
               Kirim
             </button>
             <Link
-              href="/Banner"
+              href="/Setting"
               className="text-white bg-red-700 hover:bg-red-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm w-full sm:w-auto px-5 py-2.5 text-center dark:bg-red-600 dark:hover:bg-red-700 dark:focus:ring-red-800"
             >
               Batal

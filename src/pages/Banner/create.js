@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { useRouter } from "next/router";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import axios from "axios";
 import Swal from "sweetalert2";
 import Footer2 from "@/component/Footer/Footer2";
@@ -11,54 +11,78 @@ const create = () => {
     imageUrl: "",
   });
 
+  const [previewImageUrl, setPreviewImageUrl] = useState("");
   const router = useRouter();
 
   const handleChange = (e) => {
-    const { name, value } = e.target;
+    const { name, value, files } = e.target;
 
-    setForm({
-      ...form,
-      [name]: value,
-    });
+    // If the input is for file (image), set the form's imageUrl to the selected file
+    if (name === "imageUrl" && files && files[0]) {
+      setForm({
+        ...form,
+        [name]: files[0],
+      });
+
+      // Buat URL sementara untuk preview gambar
+      const imageUrlObject = URL.createObjectURL(files[0]);
+      setPreviewImageUrl(imageUrlObject);
+    } else {
+      setForm({
+        ...form,
+        [name]: value,
+      });
+    }
   };
 
-  console.log("form", form);
-
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
+
     const { name, imageUrl } = form;
 
-    // Memeriksa apakah ada data yang kosong
-    if (!name.trim() || !imageUrl.trim()) {
+    if (!name.trim() || !imageUrl) {
       Swal.fire("Error", "Harap isi semua kolom", "error");
-      return; // Menghentikan eksekusi fungsi jika ada data yang kosong
+      return;
     }
 
-    const token = localStorage.getItem("token");
+    try {
+      const formData = new FormData();
+      formData.append("image", imageUrl);
 
-    const config = {
-      headers: {
-        "Content-type": "application/json",
-        apikey: "24405e01-fbc1-45a5-9f5a-be13afcd757c",
-        Authorization: `Bearer ${token}`,
-      },
-    };
+      const token = localStorage.getItem("token");
 
-    axios
-      .post(
-        "https://travel-journal-api-bootcamp.do.dibimbing.id/api/v1/create-banner",
-        form,
+      const config = {
+        headers: {
+          "Content-Type": "multipart/form-data",
+          apikey: "24405e01-fbc1-45a5-9f5a-be13afcd757c",
+          Authorization: `Bearer ${token}`,
+        },
+      };
+
+      const response = await axios.post(
+        "https://travel-journal-api-bootcamp.do.dibimbing.id/api/v1/upload-image",
+        formData,
         config
-      )
-      .then((res) => {
-        console.log("res", res.data);
-        Swal.fire("Berhasil", "Banner Berhasil dibuat", "success");
-        router.push("/Banner");
-      })
-      .catch((err) => {
-        Swal.fire("Gagal", err.response.data.message, "error");
-        console.log(err.response);
-      });
+      );
+
+      const bannerData = {
+        name: name,
+        imageUrl: response.data.url,
+      };
+
+      const createResponse = await axios.post(
+        "https://travel-journal-api-bootcamp.do.dibimbing.id/api/v1/create-banner",
+        bannerData,
+        config
+      );
+
+      Swal.fire("Berhasil", "Banner berhasil dibuat", "success");
+      // You may redirect or handle the response as needed
+      router.push("/Banner");
+    } catch (error) {
+      console.error("Error:", error.response.data.message);
+      Swal.fire("Gagal", error.response.data.message, "error");
+    }
   };
 
   return (
@@ -149,7 +173,6 @@ const create = () => {
               type="text"
               name="name"
               onChange={handleChange}
-              aria-describedby="helper-text-explanation"
               className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5  dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
               placeholder="Nama Banner"
               required
@@ -157,20 +180,41 @@ const create = () => {
           </div>
           <div>
             <label className="block mb-2 text-sm font-medium text-gray-900 dark:text-white">
-              Gambar URL
+              Gambar
             </label>
             <input
-              type="text"
-              name="imageUrl"
+              type="file"
+              accept="image/*"
               onChange={handleChange}
-              aria-describedby="helper-text-explanation"
+              name="imageUrl"
               className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5  dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
-              placeholder="Http://image.com"
               required
             />
+            {previewImageUrl && (
+              <img
+                className="mt-2"
+                src={previewImageUrl}
+                alt="Preview"
+                style={{ maxWidth: "300px" }}
+              />
+            )}
           </div>
 
-          className="mt-5"
+          <div className="flex gap-3">
+            <button
+              type="submit"
+              onClick={handleSubmit}
+              className="text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm w-full sm:w-auto px-5 py-2.5 text-center dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800"
+            >
+              Kirim
+            </button>
+            <Link
+              href="/Banner"
+              className="text-white bg-red-700 hover:bg-red-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm w-full sm:w-auto px-5 py-2.5 text-center dark:bg-red-600 dark:hover:bg-red-700 dark:focus:ring-red-800"
+            >
+              Batal
+            </Link>
+          </div>
         </div>
       </div>
       <Footer2 />

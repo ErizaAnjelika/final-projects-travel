@@ -53,7 +53,8 @@ const Edit = () => {
           location_maps: activityResponse.data.data.location_maps,
         });
 
-        console.log(response.data.data);
+        setPreviousImageUrl(activityResponse.data.data.imageUrls);
+        console.log(activityResponse.data.data);
       } catch (error) {
         console.error("Error fetching data:", error);
       }
@@ -79,21 +80,25 @@ const Edit = () => {
     city: "",
     location_maps: "",
   });
+  const [previousImageUrl, setPreviousImageUrl] = useState("");
 
   const handleChange = (e) => {
-    const { name, value } = e.target;
+    const { name, value, files } = e.target;
 
     // Menangani input yang harus numerik atau array
-    if (
-      name === "imageUrls" // Menangani input array
-    ) {
+    if (name === "imageUrls" && files) {
       // Jika input adalah array, pisahkan nilai dengan koma dan hapus spasi
-      const arrayValue = value.split(",").map((item) => item.trim());
+      // const arrayValue = value.split(",").map((item) => item.trim());
       // Update state
       setUpdate({
         ...update,
-        [name]: arrayValue,
+        [name]: [...update.imageUrls, ...files],
       });
+
+      // setUpdate({
+      //   ...update,
+      //   [name]: files, // Memperbarui dengan file yang dipilih
+      // });
     } else if (
       name === "price" ||
       name === "price_discount" ||
@@ -116,31 +121,94 @@ const Edit = () => {
     }
   };
 
-  const handleSubmit = async () => {
-    const token = localStorage.getItem("token");
-    try {
-      const response = await fetch(
-        `https://travel-journal-api-bootcamp.do.dibimbing.id/api/v1/update-activity/${id}`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            apikey: "24405e01-fbc1-45a5-9f5a-be13afcd757c",
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify(update),
-        }
-      );
+  const handleSubmit = async (e) => {
+    e.preventDefault();
 
-      if (response.status === 200) {
-        Swal.fire("Success", "Promo Berhasil diupdate", "success");
-        router.push("/Activity");
+    const {
+      categoryId,
+      title,
+      description,
+      imageUrls,
+      price,
+      price_discount,
+      rating,
+      total_reviews,
+      facilities,
+      address,
+      province,
+      city,
+      location_maps,
+    } = update;
+
+    try {
+      const formData = new FormData();
+      formData.append("image", imageUrls);
+
+      const token = localStorage.getItem("token");
+
+      const config = {
+        headers: {
+          apikey: "24405e01-fbc1-45a5-9f5a-be13afcd757c",
+          Authorization: `Bearer ${token}`,
+        },
+      };
+
+      if (imageUrls instanceof File) {
+        const response = await axios.post(
+          "https://travel-journal-api-bootcamp.do.dibimbing.id/api/v1/upload-image",
+          formData,
+          config
+        );
+
+        const data = {
+          categoryId: categoryId,
+          title: title,
+          description: description,
+          imageUrls: [response.data.url],
+          price: price,
+          price_discount: price_discount,
+          rating: rating,
+          total_reviews: total_reviews,
+          facilities: facilities,
+          address: address,
+          province: province,
+          city: city,
+          location_maps: location_maps,
+        };
+
+        const updateResponse = await axios.post(
+          `https://travel-journal-api-bootcamp.do.dibimbing.id/api/v1/update-activity/${id}`,
+          data,
+          config
+        );
       } else {
-        console.error("Failed to update promo");
-        Swal.fire("Error", "Promo Gagal diupdate", "error");
+        const data = {
+          categoryId: categoryId,
+          title: title,
+          description: description,
+          imageUrls: previousImageUrl,
+          price: price,
+          price_discount: price_discount,
+          rating: rating,
+          total_reviews: total_reviews,
+          facilities: facilities,
+          address: address,
+          province: province,
+          city: city,
+          location_maps: location_maps,
+        };
+        const updateData = await axios.post(
+          `https://travel-journal-api-bootcamp.do.dibimbing.id/api/v1/update-activity/${id}`,
+          data,
+          config
+        );
       }
+
+      Swal.fire("Success", "Aktivitas Berhasil diupdate", "success");
+      router.push("/Activity");
     } catch (error) {
       console.error("Error:", error);
+      Swal.fire("Gagal", error.response.data.message, "error");
     }
   };
 
@@ -274,7 +342,27 @@ const Edit = () => {
             <label className="block mb-2 text-sm font-medium text-gray-900 dark:text-white">
               Gambar
             </label>
+            <div>
+              {previousImageUrl && ( // Jika ada URL gambar sebelumnya, tampilkan gambar tersebut
+                <img
+                  src={previousImageUrl}
+                  alt="Previous Image"
+                  className="w-24 h-24 mb-2"
+                />
+              )}
+              <label className="block mb-2 text-sm font-medium text-gray-900 dark:text-white">
+                Pilih Gambar Baru (Opsional)
+              </label>
+            </div>
             <input
+              type="file"
+              accept="image/*"
+              onChange={handleChange}
+              name="imageUrls"
+              aria-describedby="helper-text-explanation"
+              className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5  dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+            />
+            {/* <input
               type="text"
               value={update.imageUrls.join(",")}
               name="imageUrls"
@@ -282,7 +370,7 @@ const Edit = () => {
               aria-describedby="helper-text-explanation"
               className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5  dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
               placeholder="https://example.com/img.png"
-            />
+            /> */}
           </div>
         </div>
         <div className="max-w-md">
@@ -435,13 +523,6 @@ const Edit = () => {
               Batal
             </Link>
           </div>
-          {/* <button
-            type="submit"
-            onClick={handleSubmit}
-            className="text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm w-full sm:w-auto px-5 py-2.5 text-center dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800"
-          >
-            Submit
-          </button> */}
         </div>
       </div>
       <Footer2 />

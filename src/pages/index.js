@@ -7,17 +7,6 @@ import Link from "next/link";
 import Footer from "@/component/Footer";
 import { useRouter } from "next/router";
 
-// export async function getStaticSideProps() {
-//   const res = await axios.get(
-//     "https://travel-journal-api-bootcamp.do.dibimbing.id/api/v1/activity/" + id,
-//     {
-//       headers: {
-//         apikey: "24405e01-fbc1-45a5-9f5a-be13afcd757c",
-//       },
-//     }
-//   );
-// }
-
 export default function Home() {
   const [banner, setBanner] = useState([]);
   const [promo, setPromo] = useState([]);
@@ -85,47 +74,6 @@ export default function Home() {
   }, []);
 
   const router = useRouter();
-  // const fetchCategorybyId = async (id) => {
-  //   try {
-  //     const response = await axios.get(
-  //       "https://travel-journal-api-bootcamp.do.dibimbing.id/api/v1/activity/" +
-  //         id,
-  //       {
-  //         headers: {
-  //           apikey: "24405e01-fbc1-45a5-9f5a-be13afcd757c",
-  //         },
-  //       }
-  //     );
-  //     setActiveCategory(id);
-  //     setActivities(response.data.data);
-  //     router.push("/activity/" + id);
-  //   } catch (error) {
-  //     console.error("Error fetching data:", error);
-  //   }
-  // };
-
-  // const handleDetailClick = () => {
-  //   // Panggil fungsi fetchCategorybyId dengan ID yang sesuai
-  //   fetchCategorybyId(id);
-  // };
-
-  // const handleTabClick = (categoryId) => {
-  //   axios
-  //     .get(
-  //       `https://travel-journal-api-bootcamp.do.dibimbing.id/api/v1/activities-by-category/${categoryId}`,
-  //       {
-  //         headers: {
-  //           apikey: "24405e01-fbc1-45a5-9f5a-be13afcd757c",
-  //         },
-  //       }
-  //     )
-  //     .then((response) => {
-  //       console.log(response.data); // Tambahkan log ini untuk melihat data yang diterima
-  //       setActivities(response.data.data);
-  //       setActiveCategory(categoryId);
-  //     })
-  //     .catch((error) => console.error("Terjadi kesalahan:", error));
-  // };
 
   const handleTabClick = (categoryId) => {
     // Jika ID kategori adalah "all", Anda dapat memprosesnya di server sebagai permintaan untuk semua data
@@ -206,37 +154,6 @@ export default function Home() {
                 </div>
               </div>
             ))}
-          </div>
-        </div>
-
-        {/* features */}
-        <div>
-          <div className="grid lg:grid-cols-3 w-full md:grid-cols-1 sm:grid-cols-1 mt-10 border rounded-lg overflow-hidden shadow h-full transform hover:shadow-2xl">
-            <div className="text-center m-5 pl-4 pr-4">
-              <img src="/img/map.png" alt="map" />
-              <h1 className="text-2xl font-bold text-gray-800 font-sans">
-                Petualangan
-              </h1>
-              <p>Nikmati pengalaman seru dan tak terlupakan.</p>
-            </div>
-            <div className="text-center m-5 pl-4 pr-4">
-              <img src="/img/guide.png" alt="guide" />
-              <h1 className="text-2xl font-bold text-gray-800 font-sans">
-                Panduan Perjalanan
-              </h1>
-              <p>Tips dan panduan untuk perjalanan Anda.</p>
-            </div>
-            <div className="text-center m-5 pl-4 pr-4">
-              <img
-                src="/img/travel.png"
-                alt="travel"
-                style={{ width: "170px" }}
-              />
-              <h1 className="text-2xl font-bold text-gray-800 font-sans">
-                Paket Liburan
-              </h1>
-              <p>Temukan paket liburan yang sesuai dengan keinginan Anda.</p>
-            </div>
           </div>
         </div>
 

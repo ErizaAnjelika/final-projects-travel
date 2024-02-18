@@ -1,15 +1,21 @@
 import { useState, useEffect } from "react";
 import axios from "axios";
-import styles from "./styles.module.css";
 import Link from "next/link";
 import Swal from "sweetalert2";
 import Footer from "@/component/Footer";
-import Footer2 from "@/component/Footer/Footer2";
+import { useAuth } from "../../hooks/useAuth";
+import { useRouter } from "next/router";
+import { Modal } from "flowbite-react";
 
 const Banner = () => {
+  const user = useAuth();
+  const router = useRouter();
   const [banner, setBanner] = useState([]);
 
   useEffect(() => {
+    if (!user) {
+      router.push("/Login");
+    }
     const fetchBanner = async () => {
       try {
         const response = await axios.get(
@@ -28,7 +34,7 @@ const Banner = () => {
     };
 
     fetchBanner();
-  }, []);
+  }, [user, router]);
 
   const deleteBanner = (id) => {
     Swal.fire({
@@ -58,12 +64,10 @@ const Banner = () => {
             config
           )
           .then((res) => {
-            console.log("res", res.data);
             Swal.fire("Berhasil", "Banner Berhasil di Hapus.", "success");
             window.location.reload();
           })
           .catch((err) => {
-            console.log(err.response);
             Swal.fire("Gagal", "Gagal Menghapus Banner", "error");
           });
       }
@@ -149,7 +153,7 @@ const Banner = () => {
       <div className="grid md:grid-cols-3 gap-3 sm:grid-cols-1 lg:grid-cols-4 mb-20">
         {banner.map((item) => (
           <div key={item.id}>
-            <div className="max-w-sm bg-white border border-gray-200 rounded-lg shadow-md hover:shadow-2xl">
+            <div className="max-w-sm bg-white border border-gray-200 rounded-lg shadow-md hover:shadow-2xl h-full">
               <img
                 className="rounded-t-lg"
                 src={item.imageUrl}
@@ -212,6 +216,7 @@ const Banner = () => {
           </div>
         ))}
       </div>
+
       <Footer />
     </div>
   );

@@ -43,32 +43,41 @@ const create = () => {
 
     fetchCategories();
   }, []);
+
+  const [previewImageUrl, setPreviewImageUrl] = useState("");
+
   const router = useRouter();
 
   const handleChange = (e) => {
-    const { name, value } = e.target;
+    const { name, value, files } = e.target;
 
-    setForm({
-      ...form,
-      [name]: name === "imageUrls" ? [value] : value,
-    });
-
-    if (name === "category") {
+    if (name === "imageUrls" && files) {
+      setForm({
+        ...form,
+        [name]: [...form.imageUrls, ...files],
+      });
+      const imageUrlObject = URL.createObjectURL(files[0]);
+      setPreviewImageUrl(imageUrlObject);
+    } else if (name === "category") {
       const selectedCategory = categories.find((cat) => cat.name === value);
       setForm({
         ...form,
         categoryId: selectedCategory ? selectedCategory.id : "",
         category: value,
       });
+    } else {
+      setForm({
+        ...form,
+        [name]: value,
+      });
     }
   };
 
-  console.log("form", form);
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     const {
-      categoryId, // Mengosongkan kategori setelah submit
+      categoryId,
       title,
       description,
       imageUrls,
@@ -83,60 +92,66 @@ const create = () => {
       location_maps,
     } = form;
 
-    if (
-      !categoryId.trim() ||
-      !title.trim() ||
-      !description.trim() ||
-      imageUrls.length === 0 ||
-      !price ||
-      !price_discount ||
-      !rating ||
-      !total_reviews ||
-      !facilities.trim() ||
-      !address.trim() ||
-      !province.trim() ||
-      !city.trim() ||
-      !location_maps.trim()
-    ) {
-      Swal.fire("Error", "Harap isi semua kolom", "error");
-      return; // Menghentikan eksekusi fungsi jika ada data yang kosong
+    // Validasi bahwa imageUrls tidak boleh kosong
+    if (imageUrls.length === 0) {
+      Swal.fire("Error", "Harap pilih gambar terlebih dahulu", "error");
+      return;
     }
-    // Mengonversi nilai numerik ke tipe data float
-    const numericFields = [
-      "price",
-      "price_discount",
-      "rating",
-      "total_reviews",
-    ];
-    numericFields.forEach((field) => {
-      form[field] = parseFloat(form[field]);
-    });
 
-    const token = localStorage.getItem("token");
+    // Validasi bahwa price harus berupa angka
+    if (isNaN(price)) {
+      Swal.fire("Error", "Harga harus berupa angka", "error");
+      return;
+    }
 
-    const config = {
-      headers: {
-        "Content-type": "application/json",
-        apikey: "24405e01-fbc1-45a5-9f5a-be13afcd757c",
-        Authorization: `Bearer ${token}`,
-      },
-    };
+    // Lanjutkan dengan pengiriman data jika tidak ada kesalahan
+    try {
+      const formData = new FormData();
+      formData.append("image", imageUrls[0]);
 
-    axios
-      .post(
-        "https://travel-journal-api-bootcamp.do.dibimbing.id/api/v1/create-activity",
-        form,
+      const token = localStorage.getItem("token");
+
+      const config = {
+        headers: {
+          apikey: "24405e01-fbc1-45a5-9f5a-be13afcd757c",
+          Authorization: `Bearer ${token}`,
+        },
+      };
+
+      const response = await axios.post(
+        "https://travel-journal-api-bootcamp.do.dibimbing.id/api/v1/upload-image",
+        formData,
         config
-      )
-      .then((res) => {
-        console.log("res", res.data);
-        Swal.fire("Success", "Category Created", "success");
-        router.push("/Activity");
-      })
-      .catch((err) => {
-        Swal.fire("Error", err.response.data.message, "error");
-        console.log(err.response);
-      });
+      );
+
+      const categoryData = {
+        categoryId: categoryId,
+        title: title,
+        description: description,
+        imageUrls: [response.data.url], // Pastikan imageUrls berupa array
+        price: parseFloat(price),
+        price_discount: parseFloat(price_discount),
+        rating: parseFloat(rating),
+        total_reviews: parseInt(total_reviews),
+        facilities: facilities,
+        address: address,
+        province: province,
+        city: city,
+        location_maps: location_maps,
+      };
+
+      const createResponse = await axios.post(
+        "https://travel-journal-api-bootcamp.do.dibimbing.id/api/v1/create-activity",
+        categoryData,
+        config
+      );
+
+      Swal.fire("Success", "Aktifitas berhasil dibuat", "success");
+      router.push("/Activity");
+    } catch (error) {
+      console.error("Error:", error.response.data.message);
+      Swal.fire("Gagal", error.response.data.message, "error");
+    }
   };
 
   return (
@@ -269,13 +284,29 @@ const create = () => {
               Gambar
             </label>
             <input
+              type="file"
+              accept="image/*"
+              onChange={handleChange}
+              name="imageUrls"
+              className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5  dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+              required
+            />
+            {previewImageUrl && (
+              <img
+                className="mt-2"
+                src={previewImageUrl}
+                alt="Preview"
+                style={{ maxWidth: "300px" }}
+              />
+            )}
+            {/* <input
               type="text"
               name="imageUrls"
               onChange={handleChange}
               aria-describedby="helper-text-explanation"
               className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5  dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
               placeholder="https://example.com/img.png"
-            />
+            /> */}
           </div>
         </div>
         <div className="max-w-md">
@@ -290,7 +321,7 @@ const create = () => {
               <input
                 type="number"
                 name="price"
-                value={form.price}
+                // value={form.price}
                 onChange={handleChange}
                 aria-describedby="helper-text-explanation"
                 className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5  dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
@@ -304,7 +335,7 @@ const create = () => {
               <input
                 type="number"
                 name="price_discount"
-                value={form.price_discount}
+                // value={form.price_discount}
                 onChange={handleChange}
                 aria-describedby="helper-text-explanation"
                 className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5  dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
@@ -320,7 +351,7 @@ const create = () => {
               <input
                 type="number"
                 name="rating"
-                value={form.rating}
+                // value={form.rating}
                 onChange={handleChange}
                 aria-describedby="helper-text-explanation"
                 className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5  dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
@@ -334,7 +365,7 @@ const create = () => {
               <input
                 type="number"
                 name="total_reviews"
-                value={form.total_reviews}
+                // value={form.total_reviews}
                 onChange={handleChange}
                 aria-describedby="helper-text-explanation"
                 className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5  dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
@@ -379,7 +410,7 @@ const create = () => {
             <input
               type="text"
               name="facilities"
-              value={form.facilities}
+              Aktifitas
               onChange={handleChange}
               aria-describedby="helper-text-explanation"
               className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5  dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"

@@ -4,12 +4,16 @@ import Link from "next/link";
 import Swal from "sweetalert2";
 import Footer from "@/component/Footer";
 import NavBar from "@/component/NavBar";
-// import styles from "./style.module.css";
+import { useAuth } from "../../hooks/useAuth";
 
 const Promo = () => {
+  const user = useAuth();
   const [promo, setPromo] = useState([]);
 
   useEffect(() => {
+    if (!user) {
+      router.push("/Login");
+    }
     const fetchPromo = async () => {
       try {
         const response = await axios.get(

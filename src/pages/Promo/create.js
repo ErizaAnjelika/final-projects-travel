@@ -16,20 +16,115 @@ const Create = () => {
     minimum_claim_price: 0,
   });
 
+  const [previewImageUrl, setPreviewImageUrl] = useState("");
   const router = useRouter();
 
   const handleChange = (e) => {
-    const { name, value } = e.target;
+    const { name, value, files } = e.target;
 
-    setForm({
-      ...form,
-      [name]: value,
-    });
+    // setForm({
+    //   ...form,
+    //   [name]: value,
+    // });
+
+    if (name === "imageUrl" && files && files[0]) {
+      setForm({
+        ...form,
+        [name]: files[0],
+      });
+
+      const imageUrlObject = URL.createObjectURL(files[0]);
+      setPreviewImageUrl(imageUrlObject);
+    } else {
+      setForm({
+        ...form,
+        [name]: value,
+      });
+    }
   };
 
   console.log("form", form);
 
-  const handleSubmit = () => {
+  // const handleSubmit = async (e) => {
+  //   e.preventDefault();
+
+  //   const {
+  //     title,
+  //     description,
+  //     imageUrl,
+  //     terms_condition,
+  //     promo_code,
+  //     promo_discount_price,
+  //     minimum_claim_price,
+  //   } = form;
+
+  //   console.log("form", form);
+  //   form.promo_discount_price = parseFloat(form.promo_discount_price);
+  //   form.minimum_claim_price = parseFloat(form.minimum_claim_price);
+  //   // Memeriksa apakah ada data yang kosong
+  //   if (
+  //     !title.trim() ||
+  //     !description.trim() ||
+  //     !imageUrl ||
+  //     !terms_condition.trim() ||
+  //     !promo_code.trim() ||
+  //     !promo_discount_price ||
+  //     !minimum_claim_price
+  //   ) {
+  //     Swal.fire("Error", "Harap isi semua kolom", "error");
+  //     return; // Menghentikan eksekusi fungsi jika ada data yang kosong
+  //   }
+
+  //   try {
+  //     const formData = new FormData();
+  //     formData.append("image", imageUrl);
+
+  //     const token = localStorage.getItem("token");
+
+  //     const config = {
+  //       headers: {
+  //         "Content-Type": "multipart/form-data",
+  //         apikey: "24405e01-fbc1-45a5-9f5a-be13afcd757c",
+  //         Authorization: `Bearer ${token}`,
+  //       },
+  //     };
+
+  //     const response = await axios.post(
+  //       "https://travel-journal-api-bootcamp.do.dibimbing.id/api/v1/upload-image",
+  //       formData,
+  //       config
+  //     );
+
+  //     const promoData = {
+  //       title: title,
+  //       description: description,
+  //       imageUrl: response.data.url,
+  //       terms_condition: terms_condition,
+  //       promo_code: promo_code,
+  //       promo_discount_price: parseFloat(promo_discount_price),
+  //       minimum_claim_price: parseFloat(minimum_claim_price),
+  //     };
+
+  //     console.log("promoData", promoData);
+
+  //     const createResponse = await axios.post(
+  //       "https://travel-journal-api-bootcamp.do.dibimbing.id/api/v1/create-promo",
+  //       promoData,
+  //       config
+  //     );
+  //     console.log("createResponse", createResponse);
+
+  //     Swal.fire("Berhasil", "Promo Berhasil dibuat", "success");
+  //     router.push("/Promo");
+  //   } catch (error) {
+  //     console.error("Error:", error.response.data.message);
+  //     Swal.fire("Gagal", error.response.data.message, "error");
+  //   }
+  // };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+
     const {
       title,
       description,
@@ -40,48 +135,84 @@ const Create = () => {
       minimum_claim_price,
     } = form;
 
+    console.log("form", form);
+    form.promo_discount_price = parseFloat(form.promo_discount_price);
+    form.minimum_claim_price = parseFloat(form.minimum_claim_price);
+
+    // Konversi nilai promo_discount_price dan minimum_claim_price ke angka
+    const promoDiscountPrice = parseFloat(promo_discount_price);
+    const minimumClaimPrice = parseFloat(minimum_claim_price);
+
+    console.log("promoDiscountPrice", promoDiscountPrice);
+    console.log("minimumClaimPrice", minimumClaimPrice);
+
+    // Memeriksa apakah nilai yang dikonversi valid
+    if (isNaN(promoDiscountPrice) || isNaN(minimumClaimPrice)) {
+      Swal.fire("Error", "Harga promo harus berupa angka", "error");
+      return;
+    }
+
     // Memeriksa apakah ada data yang kosong
     if (
       !title.trim() ||
       !description.trim() ||
-      !imageUrl.trim() ||
+      !imageUrl ||
       !terms_condition.trim() ||
-      !promo_code.trim() ||
-      !promo_discount_price.trim() ||
-      !minimum_claim_price.trim()
+      !promo_code.trim()
     ) {
       Swal.fire("Error", "Harap isi semua kolom", "error");
       return; // Menghentikan eksekusi fungsi jika ada data yang kosong
     }
-    const token = localStorage.getItem("token");
 
-    form.promo_discount_price = parseFloat(form.promo_discount_price);
-    form.minimum_claim_price = parseFloat(form.minimum_claim_price);
+    try {
+      const formData = new FormData();
+      formData.append("image", imageUrl);
+      formData.append("promo_discount_price", promo_discount_price);
+      formData.append("minimum_claim_price", minimum_claim_price);
 
-    const config = {
-      headers: {
-        "Content-type": "application/json",
-        apikey: "24405e01-fbc1-45a5-9f5a-be13afcd757c",
-        Authorization: `Bearer ${token}`,
-      },
-    };
+      const token = localStorage.getItem("token");
 
-    axios
-      .post(
-        "https://travel-journal-api-bootcamp.do.dibimbing.id/api/v1/create-promo",
-        form,
+      const config = {
+        headers: {
+          // "Content-Type": "multipart/form-data",
+          apikey: "24405e01-fbc1-45a5-9f5a-be13afcd757c",
+          Authorization: `Bearer ${token}`,
+        },
+      };
+
+      const response = await axios.post(
+        "https://travel-journal-api-bootcamp.do.dibimbing.id/api/v1/upload-image",
+        formData,
         config
-      )
-      .then((res) => {
-        console.log("res", res.data);
-        Swal.fire("Berhasil", "Promo Berhasil dibuat", "success");
-        router.push("/Promo");
-      })
-      .catch((err) => {
-        Swal.fire("Gagal", err.response.data.message, "error");
-        console.log(err.response);
-      });
+      );
+
+      const promoData = {
+        title: title,
+        description: description,
+        imageUrl: response.data.url,
+        terms_condition: terms_condition,
+        promo_code: promo_code,
+        promo_discount_price: promoDiscountPrice,
+        minimum_claim_price: minimumClaimPrice,
+      };
+
+      console.log("promoData", promoData);
+
+      const createResponse = await axios.post(
+        "https://travel-journal-api-bootcamp.do.dibimbing.id/api/v1/create-promo",
+        promoData,
+        config
+      );
+      console.log("createResponse", createResponse);
+
+      Swal.fire("Berhasil", "Promo Berhasil dibuat", "success");
+      router.push("/Promo");
+    } catch (error) {
+      console.error("Error:", error.response);
+      Swal.fire("Gagal", error.response.data.message, "error");
+    }
   };
+
   return (
     <div className="container mx-auto md:p-0 lg:p-0 p-5">
       <nav
@@ -193,17 +324,24 @@ const Create = () => {
           </div>
           <div>
             <label className="block mb-2 text-sm font-medium text-gray-900 dark:text-white">
-              Gambar URL
+              Gambar
             </label>
             <input
-              type="text"
-              name="imageUrl"
+              type="file"
+              accept="image/*"
               onChange={handleChange}
-              aria-describedby="helper-text-explanation"
+              name="imageUrl"
               className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5  dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
-              placeholder="Http://image.com"
               required
             />
+            {previewImageUrl && (
+              <img
+                className="mt-2"
+                src={previewImageUrl}
+                alt="Preview"
+                style={{ maxWidth: "300px" }}
+              />
+            )}
           </div>
           <div className="grid md:grid-cols-2 md:gap-6">
             <div>

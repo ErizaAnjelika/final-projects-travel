@@ -10,28 +10,7 @@ import { logoutUser } from "@/reducer/loginSlice";
 const NavBar = () => {
   const dispatch = useDispatch();
   const router = useRouter();
-
-  const [scrolling, setScrolling] = useState(false);
   const [user, setUser] = useState(null);
-
-  useEffect(() => {
-    const handleScroll = () => {
-      const scrollPosition = window.scrollY;
-      const offset = 200;
-
-      if (scrollPosition >= offset) {
-        setScrolling(true);
-      } else {
-        setScrolling(false);
-      }
-    };
-
-    window.addEventListener("scroll", handleScroll);
-
-    return () => {
-      window.removeEventListener("scroll", handleScroll);
-    };
-  });
 
   const handleLogout = () => {
     Swal.fire({
@@ -75,16 +54,22 @@ const NavBar = () => {
 
   return (
     <div>
-      <Navbar className="bg-white fixed w-full z-20 top-0 start-0 border-b">
+      <Navbar
+        className="bg-white fixed w-full z-20 top-0 start-0 border-b flex flex-wrap items-center justify-between"
+        style={{
+          background:
+            "linear-gradient(to bottom, rgba(255, 255, 255, 0), #ffffff)",
+        }}
+      >
         <Navbar.Brand href="https://flowbite.com/">
           <div className="flex items-center rtl:space-x-reverse">
             <img
               src="/img/logo2.png"
-              className="h-16 w-16"
+              className="h-10 w-10 md:h-12 md:w-12 lg:h-16 lg:w-16 "
               alt="Flowbite Logo"
             />
             <span
-              className="self-center text-3xl font-semibold whitespace-nowrap text-gray-800 font-serif text-shadow-md"
+              className="self-center text-xl md:text-2xl lg:text-3xl font-semibold whitespace-nowrap text-gray-800 font-serif text-shadow-md"
               style={{ textShadow: "0px 2px 1px #facb5fff" }}
             >
               TravelGo
@@ -95,7 +80,7 @@ const NavBar = () => {
         <Navbar.Collapse>
           <Navbar.Link href={"/"}>
             <div
-              className="block py-2 px-3 text-gray-900 rounded hover:border-b-2 border-gray-900 font-bold "
+              className="block py-0.5 px-0.5 md:py-2 md:px-1 lg:py-2 lg:px-3 text-gray-900 rounded hover:border-b-2 border-gray-900 font-bold "
               aria-current="page"
             >
               Beranda
@@ -103,7 +88,7 @@ const NavBar = () => {
           </Navbar.Link>
           <Navbar.Link href={"/Activity"}>
             <div
-              className="block py-2 px-3 text-gray-900 rounded hover:border-b-2 border-gray-900 font-bold"
+              className="block py-0.5 px-0.5 md:py-2 md:px-1 lg:py-2 lg:px-3  text-gray-900 rounded hover:border-b-2 border-gray-900 font-bold"
               aria-current="page"
             >
               Aktivitas
@@ -111,30 +96,17 @@ const NavBar = () => {
           </Navbar.Link>
           <Navbar.Link href={"/Promo"}>
             <div
-              className="block py-2 px-3 text-gray-900 rounded hover:border-b-2 border-gray-900 font-bold"
+              className="block py-0.5 px-0.5 md:py-2 md:px-1 lg:py-2 lg:px-3  text-gray-900 rounded hover:border-b-2 border-gray-900 font-bold"
               aria-current="page"
             >
               Promo
             </div>
           </Navbar.Link>
-          <Navbar.Link href={"/Gallery"}>
-            <div
-              className="block py-2 px-3 text-gray-900 rounded hover:border-b-2 border-gray-900 font-bold"
-              aria-current="page"
-            >
-              Galeri
-            </div>
-          </Navbar.Link>
           {user ? (
             <Navbar.Link>
-              {/* <div className="block py-2 px-3 text-gray-100 rounded md:bg-transparent hover:text-[#23aeff] hover:border-b-2 md:hover:bg-transparent">
-                {user.name}
-              </div> */}
               <Dropdown
                 label={user.name}
-                className="capitalize"
                 style={{
-                  textTransform: "capitalize",
                   background: "transparent",
                   border: "1px solid gray",
                   color: "#23aeff",
@@ -162,31 +134,21 @@ const NavBar = () => {
           ) : (
             <>
               <Navbar.Link href="/Login">
-                <div className="py-2 px-3 text-gray-100 rounded border border-orange-300 md:bg-transparent flex hover:bg-gray-800">
-                  <svg
-                    class="w-6 h-6 text-gray-100 "
-                    aria-hidden="true"
-                    xmlns="http://www.w3.org/2000/svg"
-                    fill="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      fill-rule="evenodd"
-                      d="M12 4a4 4 0 1 0 0 8 4 4 0 0 0 0-8Zm-2 9a4 4 0 0 0-4 4v1c0 1.1.9 2 2 2h8a2 2 0 0 0 2-2v-1a4 4 0 0 0-4-4h-4Z"
-                      clip-rule="evenodd"
-                    />
-                  </svg>
+                <div
+                  className="block py-0.5 px-0.5 md:py-1 md:px-2 lg:py-2 lg:px-3  text-gray-700 rounded border border-gray-300 md:bg-gray-300 hover:bg-gray-900 hover:text-white"
+                  aria-current="page"
+                >
                   Login
                 </div>
               </Navbar.Link>
-              <Navbar.Link href="/Register">
+              {/* <Navbar.Link href="/Register">
                 <div
-                  className="block py-2 px-3 text-white rounded md:bg-orange-300 hover:text-gray-900"
+                  className="block py-0.5 px-0.5 md:py-1 md:px-2 lg:py-2 lg:px-3  text-gray-700 rounded border border-gray-300 md:bg-gray-300 hover:bg-gray-900 hover:text-white"
                   aria-current="page"
                 >
                   Register
                 </div>
-              </Navbar.Link>
+              </Navbar.Link> */}
             </>
           )}
         </Navbar.Collapse>

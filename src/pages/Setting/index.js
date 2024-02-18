@@ -3,10 +3,10 @@ import Link from "next/link";
 import axios from "axios";
 import Footer2 from "@/component/Footer/Footer2";
 const Setting = () => {
-  const [data, setData] = useState([]);
+  const [user, setUser] = useState([]);
 
   useEffect(() => {
-    const fetchData = async () => {
+    const fetchUser = async () => {
       try {
         const response = await axios.get(
           "https://travel-journal-api-bootcamp.do.dibimbing.id/api/v1/user",
@@ -19,14 +19,15 @@ const Setting = () => {
           }
         );
 
-        setData(response.data.data);
+        setUser(response.data.data);
         console.log(response.data.data);
       } catch (error) {
         console.error(error);
       }
     };
-    fetchData();
+    fetchUser();
   }, []);
+
   return (
     <div className="container mx-auto md:p-0 lg:p-0 p-5">
       <nav
@@ -77,41 +78,41 @@ const Setting = () => {
         </ol>
       </nav>
       <div
-        key={data.id}
+        key={user.id}
         className="grid md:grid-cols-2 sm:grid-cols-1 mt-5 mb-10"
       >
         <div className="w-full">
           <img
             className="w-64 h-w-64 m-auto rounded-full"
-            src={data.profilePictureUrl}
-            alt={data.name}
+            src={user.profilePictureUrl}
+            alt={user.name}
           />
         </div>
         <div className="px-5">
           <div className="mb-3">
-            <h2 className="text-lg font-semibold capitalize">{data.name} </h2>
-            <p className="text-sm ml-3">{data.description}</p>
+            <h2 className="text-lg font-semibold capitalize">{user.name} </h2>
+            <p className="text-sm ml-3">{user.description}</p>
           </div>
           <div className="flex items-center mb-3">
             <div className="flex items-center space-x-1 rtl:space-x-reverse">
               <span className="bg-blue-100  text-blue-800 text-sm font-semibold px-2.5 py-0.5 rounded dark:bg-blue-200 dark:text-blue-800 ">
-                {data.role}
+                {user.role}
               </span>
             </div>
           </div>
           <div className="mt-2.5 mb-3">
             <p className="text-sm flex items-center text-gray-800 ">
-              {data.email}
+              {user.email}
             </p>
           </div>
           <div className="mt-2.5 mb-3">
             <p className="text-sm flex items-center text-gray-800 ">
-              {data.phoneNumber}
+              {user.phoneNumber}
             </p>
           </div>
           <div className="flex gap-3 mt-3">
             <Link
-              href={`/Setting/${data.id}/editRole`}
+              href={`/Setting/${user.id}/editRole`}
               type="button"
               className="flex mt-4 border border-blue-400 text-gray-800  focus:outline-none hover:bg-blue-200 hover:border-0 hover:text-gray-900  font-medium rounded-lg text-sm px-2 py-2 "
             >
@@ -134,7 +135,7 @@ const Setting = () => {
               <span className="ml-1">Edit Role</span>
             </Link>
             <Link
-              href={`/Setting/${data.id}/editProfile`}
+              href={`/Setting/${user.id}/editProfile`}
               type="button"
               className="flex mt-4 border border-blue-400 text-gray-800  focus:outline-none hover:bg-blue-200 hover:border-0 hover:text-gray-900  font-medium rounded-lg text-sm px-2 py-2 "
             >

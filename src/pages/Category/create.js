@@ -10,56 +10,86 @@ const Create = () => {
     imageUrl: "",
   });
 
+  const [previewImageUrl, setPreviewImageUrl] = useState("");
   const router = useRouter();
 
   const handleChange = (e) => {
-    const { name, value } = e.target;
-    setCategory({
-      ...category,
-      [name]: value,
-    });
+    const { name, value, files } = e.target;
+  
+    if (name === "imageUrl" && files && files[0]) {
+      setCategory({
+        ...category,
+        [name]: files[0],
+      });
+
+      // Buat URL sementara untuk preview gambar
+      const imageUrlObject = URL.createObjectURL(files[0]);
+      setPreviewImageUrl(imageUrlObject);
+    } else {
+      setCategory({
+        ...category,
+        [name]: value,
+      });
+    }
   };
 
-  const handleSubmit = (e) => {
+
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
     const { name, imageUrl } = category;
 
-    // Memeriksa apakah ada data yang kosong
-    if (!name.trim() || !imageUrl.trim()) {
+    if (!name.trim() || !imageUrl) {
       Swal.fire("Error", "Harap isi semua kolom", "error");
-      return; // Menghentikan eksekusi fungsi jika ada data yang kosong
+      return;
     }
 
-    const token = localStorage.getItem("token");
+    try {
+      const formData = new FormData();
+      formData.append("image", imageUrl); 
 
-    const config = {
-      headers: {
-        "Content-type": "application/json",
-        apikey: "24405e01-fbc1-45a5-9f5a-be13afcd757c",
-        Authorization: `Bearer ${token}`,
-      },
-    };
+      const token = localStorage.getItem("token");
 
-    axios
-      .post(
-        "https://travel-journal-api-bootcamp.do.dibimbing.id/api/v1/create-category",
-        category,
+      const config = {
+        headers: {
+          "Content-Type": "multipart/form-data",
+          apikey: "24405e01-fbc1-45a5-9f5a-be13afcd757c",
+          Authorization: `Bearer ${token}`,
+        },
+      };
+
+      const response = await axios.post(
+        "https://travel-journal-api-bootcamp.do.dibimbing.id/api/v1/upload-image",
+        formData,
         config
-      )
-      .then((res) => {
-        console.log("res", res.data);
-        Swal.fire("Berhasil", "Kategori Berhasil dibuat", "success");
-        router.push("/Category");
-      })
-      .catch((err) => {
-        Swal.fire("Gagal", err.response.data.message, "error");
-        console.log(err.response);
-      });
+      );
+
+      const categoryData = {
+        name: name,
+        imageUrl: response.data.url,
+      };
+
+      console.log("Category Data:", categoryData);
+
+      const createResponse = await axios.post(
+        "https://travel-journal-api-bootcamp.do.dibimbing.id/api/v1/create-category",
+        categoryData,
+        config
+      );
+
+      console.log("createResponse", createResponse);
+
+      Swal.fire("Berhasil", "Kategori Berhasil dibuat", "success");
+      router.push("/Category");
+    } catch (err) {
+      Swal.fire("Gagal", err.response.data.message, "error");
+      console.log(err.response);
+    }
   };
 
   return (
-    <div className="md:container md:mx-auto sm:mx-auto">
+    <div className="container mx-auto md:p-0 lg:p-0 p-5">
       <nav
         className="flex py-5 bg-white border-b border-gray-200"
         aria-label="Breadcrumb"
@@ -140,13 +170,12 @@ const Create = () => {
         <div className="space-y-6">
           <div>
             <label className="block mb-2 text-sm font-medium text-gray-900 dark:text-white">
-              Nama Banner
+              Nama Category
             </label>
             <input
               type="text"
               name="name"
               onChange={handleChange}
-              aria-describedby="helper-text-explanation"
               className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5  dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
               placeholder="Eropa, Jawa Timur"
               required
@@ -154,17 +183,24 @@ const Create = () => {
           </div>
           <div>
             <label className="block mb-2 text-sm font-medium text-gray-900 dark:text-white">
-              Gambar URL
+              Gambar
             </label>
             <input
-              type="text"
-              name="imageUrl"
+              type="file"
+              accept="image/*"
               onChange={handleChange}
-              aria-describedby="helper-text-explanation"
+              name="imageUrl"
               className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5  dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
-              placeholder="Http://image.com"
               required
             />
+            {previewImageUrl && (
+              <img
+                className="mt-2"
+                src={previewImageUrl}
+                alt="Preview"
+                style={{ maxWidth: "300px" }}
+              />
+            )}
           </div>
 
           <div className="flex gap-3">
@@ -176,7 +212,7 @@ const Create = () => {
               Kirim
             </button>
             <Link
-              href="/Banner"
+              href="/Category"
               className="text-white bg-red-700 hover:bg-red-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm w-full sm:w-auto px-5 py-2.5 text-center dark:bg-red-600 dark:hover:bg-red-700 dark:focus:ring-red-800"
             >
               Batal
@@ -184,56 +220,6 @@ const Create = () => {
           </div>
         </div>
       </div>
-      {/* <form onSubmit={handleSubmit}>
-        <div className="max-w-md mx-auto">
-          <div className="relative z-0 w-full mb-5 group">
-            <input
-              type="text"
-              name="name"
-              id="name"
-              onChange={handleChange}
-              className="block py-2.5 px-0 w-full text-sm text-gray-900 bg-transparent border-0 border-b-2 border-gray-300 appearance-none  dark:border-gray-600 dark:focus:border-blue-500 focus:outline-none focus:ring-0 focus:border-blue-600 peer"
-              placeholder=" "
-              required
-            />
-            <label
-              htmlFor="floating_email"
-              className="peer-focus:font-medium absolute text-sm text-gray-500 dark:text-gray-400 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 rtl:peer-focus:translate-x-1/4 rtl:peer-focus:left-auto peer-focus:text-blue-600 peer-focus:dark:text-blue-500 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6"
-            >
-              Nama Kategori
-            </label>
-          </div>
-          <div className="relative z-0 w-full mb-5 group">
-            <input
-              type="text"
-              name="imageUrl"
-              id="imageUrl"
-              className="block py-2.5 px-0 w-full text-sm text-gray-900 bg-transparent border-0 border-b-2 border-gray-300 appearance-none  dark:border-gray-600 dark:focus:border-blue-500 focus:outline-none focus:ring-0 focus:border-blue-600 peer"
-              placeholder=" "
-              required
-            />
-            <label
-              htmlFor="floating_password"
-              className="peer-focus:font-medium absolute text-sm text-gray-500 dark:text-gray-400 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 rtl:peer-focus:translate-x-1/4 peer-focus:text-blue-600 peer-focus:dark:text-blue-500 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6"
-            >
-              Gambar Kategori
-            </label>
-          </div>
-          <button
-            type="submit"
-            onClick={handleSubmit}
-            className="text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm w-full sm:w-auto px-5 py-2.5 text-center dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800"
-          >
-            Submit
-          </button>
-          <Link
-            href="/Category"
-            className="text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm w-full sm:w-auto px-5 py-2.5 text-center dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800"
-          >
-            Cancel
-          </Link>
-        </div>
-      </form> */}
     </div>
   );
 };

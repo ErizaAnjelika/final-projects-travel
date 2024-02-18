@@ -28,6 +28,8 @@ const Edit = () => {
           name: response.data.data.name,
           imageUrl: response.data.data.imageUrl,
         });
+
+        setPreviousImageUrl(response.data.data.imageUrl);
       } catch (err) {
         console.error(err.response);
       }
@@ -42,47 +44,86 @@ const Edit = () => {
     imageUrl: "",
   });
 
+  const [previousImageUrl, setPreviousImageUrl] = useState("");
+
   const handleChange = (e) => {
-    setUpdateData({
-      ...updateData,
-      [e.target.name]: e.target.value,
-    });
+    const { name, value, files } = e.target;
+
+    // If the input is for file (image), set the form's imageUrl to the selected file
+    if (name === "imageUrl" && files && files[0]) {
+      setUpdateData({
+        ...updateData,
+        [name]: files[0],
+      });
+    } else {
+      setUpdateData({
+        ...updateData,
+        [name]: value,
+      });
+    }
   };
 
-  // console.log("form", formData);
-  const handleSubmit = async () => {
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+
     const { name, imageUrl } = updateData;
-    const token = localStorage.getItem("token");
+
+    if (!name.trim()) {
+      Swal.fire("Error", "Harap isi semua kolom", "error");
+      return;
+    }
+
     try {
-      const response = await fetch(
-        `https://travel-journal-api-bootcamp.do.dibimbing.id/api/v1/update-banner/${id}`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            apikey: "24405e01-fbc1-45a5-9f5a-be13afcd757c",
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify({
-            name,
-            imageUrl,
-          }),
-        }
-      );
+      const formData = new FormData();
+      formData.append("image", imageUrl);
 
-      if (response.status === 200) {
-        Swal.fire("Success", "Banner Berhasil diedit", "success");
+      const token = localStorage.getItem("token");
 
-        // Handle success, e.g., redirect to another page
-        console.log("Banner updated successfully!");
-        router.push("/Banner");
+      const config = {
+        headers: {
+          "Content-Type": "multipart/form-data",
+          apikey: "24405e01-fbc1-45a5-9f5a-be13afcd757c",
+          Authorization: `Bearer ${token}`,
+        },
+      };
+
+      // Only upload image if a new image is selected
+      if (imageUrl instanceof File) {
+        const response = await axios.post(
+          `https://travel-journal-api-bootcamp.do.dibimbing.id/api/v1/upload-image`,
+          formData,
+          config
+        );
+
+        const bannerData = {
+          name: name,
+          imageUrl: response.data.url,
+        };
+
+        const updateResponse = await axios.post(
+          `https://travel-journal-api-bootcamp.do.dibimbing.id/api/v1/update-banner/${id}`,
+          bannerData,
+          config
+        );
       } else {
-        // Handle error
-        console.error("Failed to update banner");
-        Swal.fire("Failed", "Banner gagal diedit", "error");
+        // If no new image selected, proceed with updating other data
+        const bannerData = {
+          name: name,
+          imageUrl: previousImageUrl,
+        };
+
+        const updateResponse = await axios.post(
+          `https://travel-journal-api-bootcamp.do.dibimbing.id/api/v1/update-banner/${id}`,
+          bannerData,
+          config
+        );
       }
+
+      Swal.fire("Berhasil", "Banner berhasil diperbarui", "success");
+      // You may redirect or handle the response as needed
+      router.push("/Banner");
     } catch (error) {
-      console.error("Error occurred while updating banner", error);
+      Swal.fire("Gagal", error.response.data.message, "error");
     }
   };
 
@@ -183,17 +224,27 @@ const Edit = () => {
           </div>
           <div>
             <label className="block mb-2 text-sm font-medium text-gray-900 dark:text-white">
-              Gambar URL
+              Gambar
             </label>
+            <div>
+              {previousImageUrl && ( // Jika ada URL gambar sebelumnya, tampilkan gambar tersebut
+                <img
+                  src={previousImageUrl}
+                  alt="Previous Image"
+                  className="w-24 h-24 mb-2"
+                />
+              )}
+              <label className="block mb-2 text-sm font-medium text-gray-900 dark:text-white">
+                Pilih Gambar Baru (Opsional)
+              </label>
+            </div>
             <input
-              type="text"
-              name="imageUrl"
-              value={updateData.imageUrl}
+              type="file"
+              accept="image/*"
               onChange={handleChange}
+              name="imageUrl"
               aria-describedby="helper-text-explanation"
               className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5  dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
-              placeholder="Http://image.com"
-              required
             />
           </div>
 

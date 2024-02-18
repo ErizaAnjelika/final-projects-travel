@@ -1,7 +1,6 @@
 import { useParams } from "next/navigation";
 import React, { useEffect, useState } from "react";
 import axios from "axios";
-import Navbar from "@/component/NavBar";
 import Link from "next/link";
 import Footer2 from "@/component/Footer/Footer2";
 const DetailActivityPage = () => {

@@ -2,13 +2,17 @@ import React, { useEffect, useState } from "react";
 import axios from "axios";
 import Link from "next/link";
 import Swal from "sweetalert2";
-import Footer2 from "@/component/Footer/Footer2";
 import Footer from "@/component/Footer";
+import { useAuth } from "../../hooks/useAuth";
 
 const Category = () => {
+  const user = useAuth();
   const [category, setCategory] = useState([]);
 
   useEffect(() => {
+    if (!user) {
+      router.push("/Login");
+    }
     const fetchCategory = async () => {
       try {
         const response = await axios.get(
@@ -147,7 +151,7 @@ const Category = () => {
       <div className="grid md:grid-cols-3 gap-3 sm:grid-cols-1 lg:grid-cols-4 mb-20">
         {category.map((item) => (
           <div key={item.id}>
-            <div className="max-w-sm bg-white border border-gray-200 rounded-lg shadow-md hover:shadow-2xl">
+            <div className="max-w-sm bg-white border border-gray-200 rounded-lg shadow-md hover:shadow-2xl h-full">
               <img
                 className="rounded-t-lg"
                 src={item.imageUrl}
@@ -211,7 +215,7 @@ const Category = () => {
           </div>
         ))}
       </div>
-      <Footer/>
+      <Footer />
     </div>
   );
 };
